@@ -1,134 +1,68 @@
-# TiziOverlay
+# TiziReplace
 
-Project này tự build `TiziOverlay.dylib` bằng GitHub Actions trên runner macOS/Xcode.
+Bản v2 này **không tạo thêm một dòng chữ mới**.
 
-Dylib chỉ hiển thị:
+Nó tìm UILabel/UIButton có chữ:
+
+```text
+PennyIOS & EreenModz
+```
+
+và đổi chính UI đó thành:
 
 ```text
 Telegram_@TiziMod
 ```
 
-Cấu hình mặc định:
+Đồng thời:
+- đổi màu xanh nước biển RGB(0,170,255)
+- chữ đậm 16pt
+- canh giữa
+- đưa về Y = 60pt tính từ mép trên
+- thêm bóng đen nhẹ
 
-- Màu: xanh nước biển RGB(0,170,255)
-- Căn giữa theo chiều ngang
-- Vị trí: `Y = 60pt`
-- Cỡ chữ: `16pt`
-- Có bóng đen nhẹ
-- iOS deployment target: 13.0
-- Kiến trúc: arm64
+## Build
 
-## Cách dùng nhanh
-
-### 1. Tạo repository GitHub
-
-Tạo một repo mới trên GitHub.
-
-### 2. Upload toàn bộ project
-
-Upload **toàn bộ nội dung** trong file ZIP này lên repo, bao gồm thư mục ẩn:
+Upload toàn bộ project lên GitHub, giữ nguyên:
 
 ```text
 .github/workflows/build.yml
 ```
 
-Cấu trúc repo phải như sau:
-
-```text
-TiziOverlay/
-├── .github/
-│   └── workflows/
-│       └── build.yml
-├── TiziOverlay.m
-├── README.md
-└── .gitignore
-```
-
-### 3. Chạy build
-
-Trong repo:
+Sau đó:
 
 ```text
 Actions
-→ Build TiziOverlay
+→ Build TiziReplace
 → Run workflow
 ```
 
-Đợi job chạy xong.
-
-### 4. Tải file dylib
-
-Ở trang kết quả của workflow, kéo xuống phần:
+Khi build xong tải artifact:
 
 ```text
-Artifacts
-```
-
-Tải:
-
-```text
-TiziOverlay-dylib
+TiziReplace-dylib
 ```
 
 Bên trong có:
 
 ```text
-TiziOverlay.dylib
-TiziOverlay.dylib.sha256
+TiziReplace.dylib
 ```
 
 ## Inject bằng ESign
 
-Bạn có thể để menu gốc là một dylib riêng, sau đó inject thêm:
+Inject:
+1. dylib menu gốc
+2. `TiziReplace.dylib`
 
-```text
-TiziOverlay.dylib
-```
+Không inject `TiziOverlay.dylib` cũ nữa, vì bản cũ tạo một label riêng và sẽ gây hai dòng chữ.
 
-Sau khi inject xong, ký lại **toàn bộ IPA** bằng ESign rồi mới cài.
+Sau khi inject xong, ký lại toàn bộ IPA bằng ESign.
 
-## Chỉnh chữ
+## Quan trọng
 
-Trong `TiziOverlay.m`:
+Bản này chỉ thay được chữ nếu menu gốc dùng `UILabel`, `UIButton` hoặc UIKit tương tự.
 
-```objc
-static NSString * const kOverlayText = @"Telegram_@TiziMod";
-```
+Nếu chữ `PennyIOS & EreenModz` được vẽ trực tiếp bằng **Dear ImGui / Metal** thì UIKit không nhìn thấy nó; khi đó dylib này sẽ không thay đổi chữ nhưng cũng không tạo thêm chữ thứ hai.
 
-## Chỉnh vị trí
-
-Trong `TiziOverlay.m`:
-
-```objc
-static const CGFloat kTopY = 60.0;
-```
-
-Ví dụ:
-
-```text
-45 = cao hơn
-60 = mặc định
-75 = thấp hơn
-```
-
-## Chỉnh cỡ chữ
-
-```objc
-static const CGFloat kFontSize = 16.0;
-```
-
-## Chỉnh màu
-
-Mặc định:
-
-```objc
-label.textColor = [UIColor colorWithRed:0.0
-                                 green:(170.0 / 255.0)
-                                  blue:1.0
-                                 alpha:1.0];
-```
-
-## Lưu ý
-
-GitHub Actions chỉ build và ad-hoc sign file dylib. Khi inject vào IPA bằng ESign,
-hãy ký lại toàn bộ app bằng certificate/profile của bạn.
+Nếu thử bản này mà chữ gốc vẫn còn nguyên, đó là dấu hiệu mạnh cho thấy watermark được render bằng ImGui.
