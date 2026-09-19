@@ -1,4 +1,4 @@
-name: Build TiziOverlay
+name: Build TiziReplace
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
     branches:
       - main
     paths:
-      - "TiziOverlay.m"
+      - "TiziReplace.m"
       - ".github/workflows/build.yml"
 
 jobs:
@@ -14,14 +14,8 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Show Xcode and SDK info
-        run: |
-          xcodebuild -version
-          xcrun --sdk iphoneos --show-sdk-path
-          xcrun --sdk iphoneos clang --version
 
       - name: Build ARM64 iOS dylib
         shell: bash
@@ -29,7 +23,6 @@ jobs:
           set -euo pipefail
 
           SDK="$(xcrun --sdk iphoneos --show-sdk-path)"
-
           mkdir -p build
 
           xcrun --sdk iphoneos clang \
@@ -42,31 +35,30 @@ jobs:
             -framework UIKit \
             -framework Foundation \
             -framework QuartzCore \
-            -Wl,-install_name,@rpath/TiziOverlay.dylib \
+            -Wl,-install_name,@rpath/TiziReplace.dylib \
             -Wl,-dead_strip \
-            TiziOverlay.m \
-            -o build/TiziOverlay.dylib
+            TiziReplace.m \
+            -o build/TiziReplace.dylib
 
-      - name: Ad-hoc sign dylib
+      - name: Ad-hoc sign
         run: |
-          codesign --force --sign - build/TiziOverlay.dylib
-          codesign -dv --verbose=4 build/TiziOverlay.dylib || true
+          codesign --force --sign - build/TiziReplace.dylib
 
-      - name: Verify binary
+      - name: Verify
         run: |
-          file build/TiziOverlay.dylib
-          lipo -info build/TiziOverlay.dylib
-          otool -L build/TiziOverlay.dylib
+          file build/TiziReplace.dylib
+          lipo -info build/TiziReplace.dylib
+          otool -L build/TiziReplace.dylib
 
-      - name: Create SHA256
+      - name: SHA256
         run: |
-          shasum -a 256 build/TiziOverlay.dylib | tee build/TiziOverlay.dylib.sha256
+          shasum -a 256 build/TiziReplace.dylib | tee build/TiziReplace.dylib.sha256
 
-      - name: Upload dylib artifact
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: TiziOverlay-dylib
+          name: TiziReplace-dylib
           path: |
-            build/TiziOverlay.dylib
-            build/TiziOverlay.dylib.sha256
+            build/TiziReplace.dylib
+            build/TiziReplace.dylib.sha256
           if-no-files-found: error
